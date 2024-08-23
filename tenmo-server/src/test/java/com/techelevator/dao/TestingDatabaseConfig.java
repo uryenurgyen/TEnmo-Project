@@ -2,6 +2,7 @@ package com.techelevator.dao;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
@@ -14,21 +15,19 @@ import java.sql.SQLException;
 import java.util.Objects;
 
 @Configuration
+@ComponentScan(basePackages = {"com.techelevator.tenmo.dao", "com.techelevator.dao"})
 public class TestingDatabaseConfig {
 
-    // To use an existing PostgreSQL database, set the following environment variables.
-    // Otherwise, a temporary database will be created on the local machine.
     private static final String DB_HOST =
             Objects.requireNonNullElse(System.getenv("DB_HOST"), "localhost");
     private static final String DB_PORT =
             Objects.requireNonNullElse(System.getenv("DB_PORT"), "5432");
     private static final String DB_NAME =
-            Objects.requireNonNullElse(System.getenv("DB_NAME"), "TestTenmo");
+            Objects.requireNonNullElse(System.getenv("DB_NAME"), "tenmo");
     private static final String DB_USERNAME =
             Objects.requireNonNullElse(System.getenv("DB_USERNAME"), "postgres");
     private static final String DB_PASSWORD =
             Objects.requireNonNullElse(System.getenv("DB_PASSWORD"), "postgres1");
-
 
     private SingleConnectionDataSource adminDataSource;
     private JdbcTemplate adminJdbcTemplate;
@@ -52,11 +51,16 @@ public class TestingDatabaseConfig {
         dataSource.setUrl(String.format("jdbc:postgresql://%s:%s/%s", DB_HOST, DB_PORT, DB_NAME));
         dataSource.setUsername(DB_USERNAME);
         dataSource.setPassword(DB_PASSWORD);
-        dataSource.setAutoCommit(false); //So we can rollback after each test.
+        dataSource.setAutoCommit(false);
 
         ScriptUtils.executeSqlScript(dataSource.getConnection(), new ClassPathResource("test-data.sql"));
 
         return dataSource;
+    }
+
+    @Bean
+    public JdbcTemplate jdbcTemplate(DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
     }
 
     @PreDestroy

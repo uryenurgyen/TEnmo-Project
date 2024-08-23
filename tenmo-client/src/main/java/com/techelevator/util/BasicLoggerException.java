@@ -6,3 +6,5 @@ public class BasicLoggerException extends RuntimeException {
 		super(message);
 	}
 }
+
+
